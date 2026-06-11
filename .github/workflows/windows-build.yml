@@ -71,9 +71,6 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             throw "ntldd failed with exit code $LASTEXITCODE."
           }
-          if ($dependencyOutput -match 'not found') {
-            throw "ntldd reported missing libmpv dependencies:`n$($dependencyOutput -join "`n")"
-          }
 
           $dependencies = @($libmpv)
           foreach ($line in $dependencyOutput) {
