@@ -87,7 +87,7 @@ fun <T> NuvioShelfSection(
         }
         LazyRow(
             state = rowState,
-            modifier = Modifier.desktopShelfDragScroll(rowState),
+            modifier = Modifier.desktopLazyRowDragScroll(rowState),
             contentPadding = rowContentPadding,
             horizontalArrangement = Arrangement.spacedBy(itemSpacing),
         ) {
@@ -107,7 +107,7 @@ fun <T> NuvioShelfSection(
     }
 }
 
-private fun Modifier.desktopShelfDragScroll(
+internal fun Modifier.desktopLazyRowDragScroll(
     state: LazyListState,
 ): Modifier {
     if (!isDesktop) return this

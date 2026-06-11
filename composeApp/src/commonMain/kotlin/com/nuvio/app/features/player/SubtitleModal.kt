@@ -27,6 +27,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.CloudDownload
 import androidx.compose.material3.CircularProgressIndicator
@@ -35,7 +37,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,6 +49,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import nuvio.composeapp.generated.resources.Res
+import nuvio.composeapp.generated.resources.action_back
 import nuvio.composeapp.generated.resources.addon_title
 import nuvio.composeapp.generated.resources.compose_player_built_in
 import nuvio.composeapp.generated.resources.compose_player_fetch_subtitles
@@ -309,6 +315,11 @@ private fun AddonSubtitleList(
     onFetch: () -> Unit,
 ) {
     val colorScheme = MaterialTheme.colorScheme
+    val languageGroups = remember(addons) { groupAddonSubtitlesByLanguage(addons) }
+    val languageFingerprint = remember(languageGroups) {
+        languageGroups.joinToString("|") { group -> "${group.language}:${group.subtitles.size}" }
+    }
+    var selectedLanguage by rememberSaveable(languageFingerprint) { mutableStateOf<String?>(null) }
 
     if (isLoading) {
         Box(
@@ -357,50 +368,139 @@ private fun AddonSubtitleList(
         return
     }
 
+    val selectedGroup = languageGroups.firstOrNull { group -> group.language == selectedLanguage }
+
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        addons.forEach { sub ->
-            val isSelected = sub.id == selectedId
+        if (selectedGroup == null) {
+            languageGroups.forEach { group ->
+                val containsSelectedSubtitle = group.subtitles.any { subtitle ->
+                    subtitle.id == selectedId || subtitle.url == selectedId
+                }
+                AddonSubtitleLanguageRow(
+                    language = group.language,
+                    subtitleCount = group.subtitles.size,
+                    isSelected = containsSelectedSubtitle,
+                    onClick = { selectedLanguage = group.language },
+                )
+            }
+        } else {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
-                    .background(if (isSelected) colorScheme.primaryContainer else colorScheme.surfaceVariant.copy(alpha = 0.6f))
-                    .clickable { onSubtitleSelected(sub) }
-                    .padding(vertical = 5.dp, horizontal = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                    .clickable { selectedLanguage = null }
+                    .padding(vertical = 10.dp, horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(start = 5.dp),
-                ) {
-                    Text(
-                        text = sub.display,
-                        color = if (isSelected) colorScheme.onPrimaryContainer else colorScheme.onSurface,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    Text(
-                        text = languageLabelForCode(sub.language),
-                        color = if (isSelected) colorScheme.onPrimaryContainer.copy(alpha = 0.72f) else colorScheme.onSurfaceVariant,
-                        fontSize = 11.sp,
-                        modifier = Modifier.padding(bottom = 3.dp),
-                    )
-                }
-                if (isSelected) {
-                    Icon(
-                        imageVector = Icons.Rounded.Check,
-                        contentDescription = null,
-                        tint = colorScheme.primary,
-                        modifier = Modifier
-                            .size(18.dp)
-                            .padding(end = 2.dp),
-                    )
-                }
+                Icon(
+                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                    contentDescription = stringResource(Res.string.action_back),
+                    tint = colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp),
+                )
+                Text(
+                    text = languageLabelForCode(selectedGroup.language),
+                    color = colorScheme.onSurface,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                )
             }
+
+            selectedGroup.subtitles.forEach { sub ->
+                AddonSubtitleRow(
+                    subtitle = sub,
+                    isSelected = sub.id == selectedId || sub.url == selectedId,
+                    onClick = { onSubtitleSelected(sub) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AddonSubtitleLanguageRow(
+    language: String,
+    subtitleCount: Int,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+) {
+    val colorScheme = MaterialTheme.colorScheme
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (isSelected) colorScheme.primaryContainer else colorScheme.surfaceVariant.copy(alpha = 0.6f))
+            .clickable(onClick = onClick)
+            .padding(vertical = 10.dp, horizontal = 12.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = languageLabelForCode(language),
+            color = if (isSelected) colorScheme.onPrimaryContainer else colorScheme.onSurface,
+            fontSize = 15.sp,
+            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = subtitleCount.toString(),
+                color = if (isSelected) colorScheme.onPrimaryContainer.copy(alpha = 0.72f) else colorScheme.onSurfaceVariant,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Icon(
+                imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                contentDescription = null,
+                tint = if (isSelected) colorScheme.onPrimaryContainer else colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(18.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun AddonSubtitleRow(
+    subtitle: AddonSubtitle,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+) {
+    val colorScheme = MaterialTheme.colorScheme
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (isSelected) colorScheme.primaryContainer else colorScheme.surfaceVariant.copy(alpha = 0.6f))
+            .clickable(onClick = onClick)
+            .padding(vertical = 5.dp, horizontal = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = subtitle.addonName?.takeIf { it.isNotBlank() } ?: subtitle.display,
+            color = if (isSelected) colorScheme.onPrimaryContainer else colorScheme.onSurface,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 5.dp),
+        )
+        if (isSelected) {
+            Icon(
+                imageVector = Icons.Rounded.Check,
+                contentDescription = null,
+                tint = colorScheme.primary,
+                modifier = Modifier
+                    .size(18.dp)
+                    .padding(end = 2.dp),
+            )
         }
     }
 }

@@ -33,6 +33,34 @@ data class AddonSubtitle(
     val isSelected: Boolean = false,
 )
 
+internal data class AddonSubtitleLanguageGroup(
+    val language: String,
+    val subtitles: List<AddonSubtitle>,
+)
+
+private val knownAddonSubtitleLanguages =
+    AvailableLanguageOptions.mapNotNull { option -> normalizeLanguageCode(option.code) }.toSet()
+
+internal fun groupAddonSubtitlesByLanguage(
+    subtitles: List<AddonSubtitle>,
+): List<AddonSubtitleLanguageGroup> =
+    subtitles
+        .groupBy { subtitle ->
+            normalizeLanguageCode(subtitle.language)
+                ?.takeIf(knownAddonSubtitleLanguages::contains)
+                ?: "unknown"
+        }
+        .map { (language, groupedSubtitles) ->
+            AddonSubtitleLanguageGroup(
+                language = language,
+                subtitles = groupedSubtitles,
+            )
+        }
+        .sortedWith(
+            compareBy<AddonSubtitleLanguageGroup> { it.language == "unknown" }
+                .thenBy { it.language },
+        )
+
 enum class SubtitleTab {
     BuiltIn,
     Addons,

@@ -317,6 +317,7 @@ let sourceVirtualSpacer = null;
 let sourceVirtualRenderRaf = 0;
 let selectedEpisodeSeason = null;
 let episodeStreamFilterId = "";
+let selectedAddonSubtitleLanguage = "";
 let submitIntroDraft = {
   segmentType: "intro",
   startTime: "00:00",
@@ -727,6 +728,9 @@ const openPlayerModal = modal => {
     return;
   }
   activeModal = modal;
+  if (modal === "subtitles") {
+    selectedAddonSubtitleLanguage = "";
+  }
   if (modal === "submitIntro") {
     submitIntroDraft = {
       segmentType: state.submitIntroSegmentType || "intro",
@@ -845,9 +849,51 @@ const renderAddonSubtitleList = () => {
     addonSubtitleList.appendChild(row);
     return;
   }
+  const languageGroups = [];
+  const groupsByLanguage = new Map();
   items.forEach(item => {
+    const language = item.languageLabel || "Unknown";
+    let group = groupsByLanguage.get(language);
+    if (!group) {
+      group = { language, items: [] };
+      groupsByLanguage.set(language, group);
+      languageGroups.push(group);
+    }
+    group.items.push(item);
+  });
+  languageGroups.sort((left, right) => left.language.localeCompare(right.language));
+
+  const selectedGroup = languageGroups.find(group => group.language === selectedAddonSubtitleLanguage);
+  if (!selectedGroup) {
+    languageGroups.forEach(group => {
+      appendTrackRow(
+        addonSubtitleList,
+        `${group.language} (${group.items.length})`,
+        group.items.some(item => Boolean(item.isSelected)),
+        () => {
+          selectedAddonSubtitleLanguage = group.language;
+          renderAddonSubtitleList();
+        },
+        false,
+      );
+    });
+    return;
+  }
+
+  appendTrackRow(
+    addonSubtitleList,
+    `\u2190 ${state.backLabel || "Back"} \u2022 ${selectedGroup.language}`,
+    false,
+    () => {
+      selectedAddonSubtitleLanguage = "";
+      renderAddonSubtitleList();
+    },
+    false,
+  );
+
+  selectedGroup.items.forEach(item => {
     const label = item.display || item.languageLabel || "Subtitle";
-    const secondary = [item.languageLabel, item.addonName].filter(Boolean).join(" • ");
+    const secondary = item.addonName || "";
     const row = document.createElement("button");
     row.type = "button";
     row.className = `track-row stream-row${item.isSelected ? " selected" : ""}`;
@@ -1879,6 +1925,7 @@ subtitleBuiltInTab.addEventListener("click", event => {
 });
 subtitleAddonsTab.addEventListener("click", event => {
   event.stopPropagation();
+  selectedAddonSubtitleLanguage = "";
   selectSubtitleTab("Addons", 1);
 });
 subtitleStyleTab.addEventListener("click", event => {
