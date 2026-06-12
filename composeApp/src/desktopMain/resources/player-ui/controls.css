@@ -695,6 +695,7 @@ button:disabled {
 .header-button,
 .side-control,
 .play-control,
+.transport-control,
 .skip-prompt,
 .next-episode-card,
 .locked-button,
@@ -726,6 +727,7 @@ button:disabled {
 
 .side-control:hover,
 .play-control:hover,
+.transport-control:hover:not(:disabled),
 .action:hover {
   background: rgba(255, 255, 255, .12);
 }
@@ -740,6 +742,8 @@ button:disabled {
 .locked-button.is-pressed,
 .side-control:active,
 .side-control.is-pressed,
+.transport-control:active,
+.transport-control.is-pressed,
 .action:active,
 .action.is-pressed {
   transform: scale(.94);
@@ -759,10 +763,16 @@ button:disabled {
   position: absolute;
   left: 50%;
   top: 50%;
+  z-index: 6;
   transform: translate(-50%, calc(-50% - var(--center-lift)));
   display: flex;
   align-items: center;
   gap: var(--center-gap);
+}
+
+.center-next-control {
+  position: absolute;
+  left: calc(100% + var(--center-gap));
 }
 
 .center-status {
@@ -1234,6 +1244,9 @@ button:disabled {
   display: grid;
   place-items: center;
   border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .08);
+  background: rgba(0, 0, 0, .3);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, .5);
 }
 
 .side-control {
@@ -1242,6 +1255,8 @@ button:disabled {
 
 .play-control {
   padding: var(--play-pad);
+  border-color: rgba(255, 255, 255, .16);
+  background: rgba(255, 255, 255, .12);
 }
 
 .side-control svg {
@@ -1252,6 +1267,12 @@ button:disabled {
 .play-control svg {
   width: var(--play-icon);
   height: var(--play-icon);
+}
+
+.side-control:disabled,
+.transport-control:disabled {
+  cursor: default;
+  opacity: .38;
 }
 
 .progress {
@@ -1313,11 +1334,14 @@ button:disabled {
   margin: 0 14px;
   appearance: none;
   background: transparent;
+  cursor: pointer;
+  touch-action: none;
 }
 
 .scrub::-webkit-slider-runnable-track {
   height: 4px;
   border-radius: 999px;
+  cursor: pointer;
   background:
     linear-gradient(to right, var(--theme-timeline-fill) 0 var(--progress, 0%), var(--theme-timeline-track) var(--progress, 0%) 100%);
 }
@@ -1330,9 +1354,20 @@ button:disabled {
   border-radius: 999px;
   background: var(--theme-control-foreground);
   box-shadow: 0 0 0 1px rgba(255, 255, 255, .18);
+  cursor: grab;
   transition:
     transform var(--motion-fast) var(--ease-out),
     box-shadow var(--motion-standard) ease;
+}
+
+.scrub:hover::-webkit-slider-thumb {
+  transform: scale(1.1);
+}
+
+.scrub:active,
+.scrub:active::-webkit-slider-runnable-track,
+.scrub:active::-webkit-slider-thumb {
+  cursor: grabbing;
 }
 
 .scrub:active::-webkit-slider-thumb {
@@ -1360,8 +1395,61 @@ button:disabled {
 
 .action-row {
   display: flex;
-  justify-content: center;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   min-width: 0;
+  padding: 0 14px;
+}
+
+.transport-group {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, .5);
+}
+
+.transport-control {
+  min-width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 8px;
+  border-radius: 7px;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.transport-control svg {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+}
+
+.transport-play {
+  min-width: 40px;
+  background: rgba(255, 255, 255, .12);
+}
+
+.transport-play svg {
+  width: 22px;
+  height: 22px;
+}
+
+.transport-next {
+  padding-right: 10px;
+}
+
+.transport-next span {
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 600;
 }
 
 .action-pill {
@@ -1370,9 +1458,9 @@ button:disabled {
   align-items: center;
   justify-content: center;
   gap: 0;
-  padding: 2px 4px;
-  border: 1px solid rgba(255, 255, 255, .2);
-  border-radius: 24px;
+  padding: 3px;
+  border: 1px solid rgba(255, 255, 255, .16);
+  border-radius: 10px;
   background: rgba(0, 0, 0, .5);
   overflow: hidden;
 }
@@ -1382,8 +1470,9 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px;
-  border-radius: 22px;
+  min-height: 36px;
+  padding: 8px 10px;
+  border-radius: 7px;
   color: #fff;
   white-space: nowrap;
 }
@@ -2087,6 +2176,15 @@ button:focus-visible,
     display: none;
   }
 
+  .transport-next span,
+  .action span {
+    display: none;
+  }
+
+  .action-row {
+    gap: 8px;
+  }
+
   .modal-layer {
     padding: 14px;
   }
@@ -2121,6 +2219,7 @@ button:focus-visible,
   .header-button,
   .side-control,
   .play-control,
+  .transport-control,
   .locked-button,
   .action,
   .panel-button,

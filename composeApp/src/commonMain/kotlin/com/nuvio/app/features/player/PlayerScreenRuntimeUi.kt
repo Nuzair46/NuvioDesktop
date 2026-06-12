@@ -144,7 +144,7 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
         }
     }.orEmpty()
     val nativeSkipInterval = activeSkipInterval.takeIf { initialLoadCompleted && !pausedOverlayVisible }
-    val nextEpisodeForControls = nextEpisodeInfo.takeIf { isSeries && showNextEpisodeCard }
+    val nextEpisodeForControls = nextEpisodeInfo.takeIf { isSeries }
     val nextEpisodeStatus = when {
         nextEpisodeForControls == null -> ""
         !nextEpisodeForControls.hasAired && !nextEpisodeForControls.unairedMessage.isNullOrBlank() ->
@@ -306,7 +306,7 @@ internal fun PlayerScreenRuntime.RenderPlayerRuntimeUi() {
         skipPromptStartMs = ((nativeSkipInterval?.startTime ?: 0.0) * 1000).toLong().coerceAtLeast(0L),
         skipPromptEndMs = ((nativeSkipInterval?.endTime ?: 0.0) * 1000).toLong().coerceAtLeast(0L),
         skipPromptDismissed = skipIntervalDismissed,
-        nextEpisodeVisible = nextEpisodeForControls != null && !playerControlsLocked,
+        nextEpisodeVisible = nextEpisodeForControls != null && showNextEpisodeCard && !playerControlsLocked,
         nextEpisodeHeaderLabel = stringResource(Res.string.player_next_episode),
         nextEpisodeTitle = nextEpisodeForControls?.let {
             stringResource(

@@ -17,6 +17,11 @@ const pauseEpisodeTitle = document.getElementById("pauseEpisodeTitle");
 const pauseDescription = document.getElementById("pauseDescription");
 const toggle = document.getElementById("toggle");
 const toggleIcon = document.getElementById("toggleIcon");
+const bottomToggle = document.getElementById("bottomToggle");
+const bottomToggleIcon = document.getElementById("bottomToggleIcon");
+const centerNextEpisode = document.getElementById("centerNextEpisode");
+const bottomNextEpisode = document.getElementById("bottomNextEpisode");
+const bottomNextEpisodeLabel = document.getElementById("bottomNextEpisodeLabel");
 const lockIcon = document.getElementById("lockIcon");
 const title = document.getElementById("title");
 const episode = document.getElementById("episode");
@@ -1731,11 +1736,23 @@ const renderChrome = () => {
   setVisible(episodesButton, Boolean(state.showEpisodes));
 
   const playPauseLabel = isPlaying ? state.pauseLabel : state.playLabel;
-  if (toggle) {
-    toggle.setAttribute("aria-label", playPauseLabel || (isPlaying ? "Pause" : "Play"));
-  }
-  if (toggleIcon) {
-    toggleIcon.setAttribute("href", isPlaying ? "#icon-pause" : "#icon-play");
+  [toggle, bottomToggle].forEach(button => {
+    if (button) button.setAttribute("aria-label", playPauseLabel || (isPlaying ? "Pause" : "Play"));
+  });
+  [toggleIcon, bottomToggleIcon].forEach(icon => {
+    if (icon) icon.setAttribute("href", isPlaying ? "#icon-pause" : "#icon-play");
+  });
+  const nextEpisodeLabel = state.nextEpisodeHeaderLabel || "Next episode";
+  const hasNextEpisode = Boolean(state.nextEpisodeTitle || state.nextEpisodePlayable);
+  [centerNextEpisode, bottomNextEpisode].forEach(button => {
+    if (!button) return;
+    setVisible(button, hasNextEpisode);
+    button.disabled = !state.nextEpisodePlayable;
+    button.setAttribute("aria-label", nextEpisodeLabel);
+    button.setAttribute("title", state.nextEpisodeTitle || nextEpisodeLabel);
+  });
+  if (bottomNextEpisodeLabel) {
+    bottomNextEpisodeLabel.textContent = nextEpisodeLabel;
   }
   lockButton.setAttribute("aria-label", state.isLocked ? state.unlockLabel : state.lockLabel);
   lockIcon.setAttribute("href", state.isLocked ? "#icon-lock-open" : "#icon-lock");
@@ -2124,6 +2141,16 @@ nextEpisodeCard.addEventListener("click", event => {
   if (state.nextEpisodePlayable) {
     send("playNextEpisode", 0);
   }
+});
+
+[centerNextEpisode, bottomNextEpisode].forEach(button => {
+  button.addEventListener("click", event => {
+    event.stopPropagation();
+    noteChromeActivity(true);
+    if (state.nextEpisodePlayable) {
+      send("playNextEpisode", 0);
+    }
+  });
 });
 
 seek.addEventListener("input", () => {

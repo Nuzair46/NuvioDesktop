@@ -113,6 +113,21 @@
         <span class="center-spinner" aria-hidden="true"></span>
       </section>
 
+      <section class="center-controls" aria-label="Playback controls">
+        <button class="side-control" type="button" data-command="seekBack" aria-label="Back 10 seconds" title="Back 10 seconds">
+          <svg><use href="#icon-replay10"></use></svg>
+        </button>
+        <button class="play-control" id="toggle" type="button" data-command="toggle" aria-label="Play" title="Play / pause">
+          <svg><use id="toggleIcon" href="#icon-play"></use></svg>
+        </button>
+        <button class="side-control" type="button" data-command="seekForward" aria-label="Forward 10 seconds" title="Forward 10 seconds">
+          <svg><use href="#icon-forward10"></use></svg>
+        </button>
+        <button class="side-control center-next-control" id="centerNextEpisode" type="button" aria-label="Next episode" title="Next episode" hidden>
+          <svg><use href="#icon-skip-next"></use></svg>
+        </button>
+      </section>
+
       <section class="playback-error" id="playbackError" aria-label="Playback error" aria-hidden="true">
         <div class="playback-error-content">
           <h1 class="playback-error-title" id="playbackErrorTitle">Playback error</h1>
@@ -174,6 +189,21 @@
           <span class="time-pill" id="duration">00:00</span>
         </div>
         <div class="action-row">
+          <div class="transport-group" aria-label="Playback controls">
+            <button class="transport-control" type="button" data-command="seekBack" aria-label="Back 10 seconds" title="Back 10 seconds">
+              <svg><use href="#icon-replay10"></use></svg>
+            </button>
+            <button class="transport-control transport-play" id="bottomToggle" type="button" data-command="toggle" aria-label="Play" title="Play / pause">
+              <svg><use id="bottomToggleIcon" href="#icon-play"></use></svg>
+            </button>
+            <button class="transport-control" type="button" data-command="seekForward" aria-label="Forward 10 seconds" title="Forward 10 seconds">
+              <svg><use href="#icon-forward10"></use></svg>
+            </button>
+            <button class="transport-control transport-next" id="bottomNextEpisode" type="button" aria-label="Next episode" title="Next episode" hidden>
+              <svg><use href="#icon-skip-next"></use></svg>
+              <span id="bottomNextEpisodeLabel">Next</span>
+            </button>
+          </div>
           <div class="action-pill">
             <button class="action" data-command="resize"><svg><use href="#icon-aspect"></use></svg><span id="resizeLabel">Fit</span></button>
             <button class="action" data-command="speed"><svg><use href="#icon-speed"></use></svg><span id="speedLabel">1x</span></button>
