@@ -95,11 +95,11 @@ jobs:
           Write-Host "Staged $($copied.Count) libmpv runtime DLLs."
           $copied | Sort-Object | ForEach-Object { Write-Host "  $_" }
 
-      - name: Generate public runtime configuration
+      - name: Generate runtime configuration
         shell: pwsh
         env:
-          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ vars.SUPABASE_ANON_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
           TRAKT_CLIENT_ID: ${{ vars.TRAKT_CLIENT_ID }}
           TRAKT_REDIRECT_URI: ${{ vars.TRAKT_REDIRECT_URI }}
           INTRODB_API_URL: ${{ vars.INTRODB_API_URL }}
@@ -110,6 +110,17 @@ jobs:
           DONATIONS_BASE_URL: ${{ vars.DONATIONS_BASE_URL }}
           DONATIONS_DONATE_URL: ${{ vars.DONATIONS_DONATE_URL }}
         run: |
+          $requiredProperties = @("SUPABASE_URL", "SUPABASE_ANON_KEY")
+          foreach ($name in $requiredProperties) {
+            $value = [Environment]::GetEnvironmentVariable($name)
+            if ([string]::IsNullOrWhiteSpace($value)) {
+              throw "Required runtime secret '$name' is missing."
+            }
+          }
+          if ($env:SUPABASE_URL -notmatch '^https://' -or $env:SUPABASE_URL -match 'localhost|127\.0\.0\.1') {
+            throw "SUPABASE_URL must use a non-local HTTPS endpoint."
+          }
+
           $propertyNames = @(
             "SUPABASE_URL",
             "SUPABASE_ANON_KEY",
